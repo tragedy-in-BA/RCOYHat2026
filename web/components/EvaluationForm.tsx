@@ -81,22 +81,6 @@ function UploadZone({
   )
 }
 
-async function uploadToSupabase(file: File, path: string): Promise<string | null> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !anonKey) return null
-
-  const res = await fetch(
-    `${supabaseUrl}/storage/v1/object/evaluations-docs/${path}`,
-    {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${anonKey}`, 'Content-Type': file.type },
-      body: file,
-    }
-  )
-  if (!res.ok) return null
-  return `evaluations-docs/${path}`
-}
 
 export default function EvaluationForm() {
   const [form, setForm] = useState<FormState>({
@@ -135,18 +119,6 @@ export default function EvaluationForm() {
     if (!validate()) return
     setSubmitting(true)
 
-    const sessionId = crypto.randomUUID()
-    let contrato_pdf_path: string | null = null
-    let dni_path: string | null = null
-
-    if (files.contrato) {
-      contrato_pdf_path = await uploadToSupabase(files.contrato, `${sessionId}/contrato.pdf`)
-    }
-    if (files.dni) {
-      const ext = files.dni.name.split('.').pop() ?? 'pdf'
-      dni_path = await uploadToSupabase(files.dni, `${sessionId}/dni.${ext}`)
-    }
-
     const payload = {
       nombre: form.nombre,
       email: form.email,
@@ -161,16 +133,15 @@ export default function EvaluationForm() {
       meses_restantes: form.meses_restantes ? parseInt(form.meses_restantes) : undefined,
       garantia: form.garantia,
       caucion: form.caucion ? 'si' : 'no',
-      contrato_pdf_path,
-      dni_path,
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
-    await fetch(`${apiUrl}/evaluations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
+    try {
+      await fetch('/api/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+    } catch {}
 
     setSubmitting(false)
     setSuccess(true)
@@ -257,8 +228,8 @@ export default function EvaluationForm() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Ciudad <span className="req">*</span></label>
-                    <input className={`form-input ${errors.ciudad ? 'error' : ''}`} placeholder="Buenos Aires" value={form.ciudad} onChange={(e) => set('ciudad', e.target.value)} />
+                    <label>Barrio <span className="req">*</span></label>
+                    <input className={`form-input ${errors.ciudad ? 'error' : ''}`} placeholder="Palermo, Recoleta…" value={form.ciudad} onChange={(e) => set('ciudad', e.target.value)} />
                     {errors.ciudad && <span className="form-error">{errors.ciudad}</span>}
                   </div>
                   <div className="form-group">

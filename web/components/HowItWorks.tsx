@@ -8,7 +8,7 @@ const STEPS = [
   {
     num: '02',
     title: 'Análisis automático',
-    desc: 'Nuestro motor de análisis basado en IA procesa automáticamente la información del contrato y valida los datos ingresados.',
+    desc: 'Nuestro equipo revisará tu contrato y te hará una oferta personalizada en base a sus condiciones.',
     delay: 'fade-up-delay-1',
   },
   {

@@ -51,7 +51,7 @@ export default function Simulator() {
                   value={moneda}
                   onChange={(e) => setMoneda(e.target.value as 'ARS' | 'USD')}
                 >
-                  <option value="ARS">ARS – Pesos argentinos</option>
+                  <option value="ARS">ARS – Pesos ajustados por IPC</option>
                   <option value="USD">USD – Dólares</option>
                 </select>
               </div>
