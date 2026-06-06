@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.egg-info/
+.venv/
+venv/
+api_venv/
+ENV/
+*.pyc
+
+# Node
+node_modules/
+.next/
+out/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docs (reference only)
+docs/
+
+# Deployment
+.railway/
+.vercel/
