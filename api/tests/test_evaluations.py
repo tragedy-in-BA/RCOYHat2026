@@ -10,7 +10,7 @@ VALID_PAYLOAD = {
     "telefono": "+54 9 11 1234 5678",
     "direccion": "Av. Corrientes 1234",
     "ciudad": "Palermo",
-    "tipo_inmueble": "profesional",
+    "tipo_inmueble": "comercial",
     "valor_mensual": 450000,
     "moneda": "ARS",
     "fecha_inicio": "2024-01-01",
@@ -80,7 +80,7 @@ async def test_create_evaluation_rejects_invalid_email() -> None:
 
 @pytest.mark.asyncio
 async def test_create_evaluation_rejects_old_tipo_inmueble() -> None:
-    payload = {**VALID_PAYLOAD, "tipo_inmueble": "departamento"}
+    payload = {**VALID_PAYLOAD, "tipo_inmueble": "profesional"}
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/evaluations", json=payload)
     assert response.status_code == 422

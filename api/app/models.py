@@ -9,7 +9,7 @@ class EvaluationCreate(BaseModel):
     telefono: str
     direccion: str
     ciudad: str
-    tipo_inmueble: Literal["empresa", "profesional", "persona fisica"]
+    tipo_inmueble: Literal["empresa", "comercial", "persona fisica"]
     valor_mensual: float
     moneda: Literal["ARS", "USD"]
     fecha_inicio: date

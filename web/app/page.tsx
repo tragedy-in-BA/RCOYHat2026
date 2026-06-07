@@ -1,6 +1,5 @@
 import Nav from '@/components/Nav'
 import Hero from '@/components/Hero'
-import Stats from '@/components/Stats'
 import HowItWorks from '@/components/HowItWorks'
 import Benefits from '@/components/Benefits'
 import Simulator from '@/components/Simulator'
@@ -14,7 +13,6 @@ export default function Home() {
       <ScrollAnimations />
       <Nav />
       <Hero />
-      <Stats />
       <HowItWorks />
       <Benefits />
       <Simulator />

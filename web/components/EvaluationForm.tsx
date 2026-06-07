@@ -2,7 +2,7 @@
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 
-type TipoInmueble = 'empresa' | 'profesional' | 'persona fisica'
+type TipoInmueble = 'empresa' | 'comercial' | 'persona fisica'
 type Moneda = 'ARS' | 'USD'
 type Garantia = 'propietario' | 'caucion' | 'recibo' | 'aval' | 'deposito'
 
@@ -96,7 +96,7 @@ function fmt(n: number, prefix: string): string {
 export default function EvaluationForm() {
   const [form, setForm] = useState<FormState>({
     nombre: '', email: '', telefono: '', direccion: '', ciudad: '',
-    tipo_inmueble: 'profesional', valor_mensual: '', moneda: 'ARS',
+    tipo_inmueble: 'comercial', valor_mensual: '', moneda: 'ARS',
     fecha_inicio: '', fecha_fin: '', meses_restantes: '', garantia: '',
     caucion: false, sueldo: '', antiguedad_contrato: '',
   })
@@ -276,7 +276,7 @@ export default function EvaluationForm() {
                   <div className="form-group">
                     <label>Tipo de inquilino <span className="req">*</span></label>
                     <div className="radio-group">
-                      {(['empresa', 'profesional', 'persona fisica'] as TipoInmueble[]).map((t) => (
+                      {(['empresa', 'comercial', 'persona fisica'] as TipoInmueble[]).map((t) => (
                         <button key={t} type="button" className={`radio-btn ${form.tipo_inmueble === t ? 'active' : ''}`} onClick={() => set('tipo_inmueble', t)}>
                           {t === 'persona fisica' ? 'Persona física' : t.charAt(0).toUpperCase() + t.slice(1)}
                         </button>
