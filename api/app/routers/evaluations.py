@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from app.models import EvaluationCreate, EvaluationResponse
+from app.models import EvaluationCreate, EvaluationResponse, OfertaResult
 from app.config import settings
+from app.services.pricing import calcular_oferta
 import resend
 import uuid
+from typing import Optional
 
 router = APIRouter(prefix="/evaluations", tags=["evaluations"])
 
@@ -42,4 +44,10 @@ async def create_evaluation(body: EvaluationCreate) -> EvaluationResponse:
             ),
         })
 
-    return EvaluationResponse(id=row_id, status="pending_review")
+    oferta: Optional[OfertaResult] = None
+    try:
+        oferta = calcular_oferta(body)
+    except Exception:
+        pass
+
+    return EvaluationResponse(id=row_id, status="pending_review", oferta=oferta)

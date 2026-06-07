@@ -9,7 +9,7 @@ class EvaluationCreate(BaseModel):
     telefono: str
     direccion: str
     ciudad: str
-    tipo_inmueble: Literal["departamento", "casa", "local", "oficina"]
+    tipo_inmueble: Literal["empresa", "profesional", "persona fisica"]
     valor_mensual: float
     moneda: Literal["ARS", "USD"]
     fecha_inicio: date
@@ -17,6 +17,8 @@ class EvaluationCreate(BaseModel):
     meses_restantes: Optional[int] = None
     garantia: Literal["propietario", "caucion", "recibo", "aval", "deposito"]
     caucion: Literal["si", "no"] = "no"
+    sueldo: float
+    antiguedad_contrato: int
     contrato_pdf_path: Optional[str] = None
     dni_path: Optional[str] = None
 
@@ -27,7 +29,21 @@ class EvaluationCreate(BaseModel):
             raise ValueError("valor_mensual must be positive")
         return v
 
+    @field_validator("sueldo")
+    @classmethod
+    def sueldo_must_be_positive(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("sueldo must be positive")
+        return v
+
+
+class OfertaResult(BaseModel):
+    calificacion: str
+    precio_propietario: float
+    tasa_mensual: float
+
 
 class EvaluationResponse(BaseModel):
     id: str
     status: str
+    oferta: Optional[OfertaResult] = None

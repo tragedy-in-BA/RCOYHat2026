@@ -9,15 +9,17 @@ VALID_PAYLOAD = {
     "email": "juan@test.com",
     "telefono": "+54 9 11 1234 5678",
     "direccion": "Av. Corrientes 1234",
-    "ciudad": "Buenos Aires",
-    "tipo_inmueble": "departamento",
-    "valor_mensual": 150000,
+    "ciudad": "Palermo",
+    "tipo_inmueble": "profesional",
+    "valor_mensual": 450000,
     "moneda": "ARS",
     "fecha_inicio": "2024-01-01",
     "fecha_fin": "2026-01-01",
     "meses_restantes": 18,
     "garantia": "caucion",
     "caucion": "si",
+    "sueldo": 2500000,
+    "antiguedad_contrato": 12,
 }
 
 
@@ -40,6 +42,27 @@ async def test_create_evaluation_returns_201() -> None:
 
 
 @pytest.mark.asyncio
+async def test_create_evaluation_includes_oferta() -> None:
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value = MagicMock(error=None)
+
+    with patch("app.routers.evaluations._get_supabase", return_value=mock_client), \
+         patch("app.config.settings.supabase_url", "https://fake.supabase.co"), \
+         patch("app.config.settings.supabase_service_key", "fake-key"), \
+         patch("app.config.settings.resend_api_key", ""):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post("/evaluations", json=VALID_PAYLOAD)
+
+    assert response.status_code == 201
+    data = response.json()
+    oferta = data.get("oferta")
+    assert oferta is not None
+    assert "calificacion" in oferta
+    assert "precio_propietario" in oferta
+    assert "tasa_mensual" in oferta
+
+
+@pytest.mark.asyncio
 async def test_create_evaluation_rejects_zero_valor() -> None:
     payload = {**VALID_PAYLOAD, "valor_mensual": 0}
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -50,6 +73,14 @@ async def test_create_evaluation_rejects_zero_valor() -> None:
 @pytest.mark.asyncio
 async def test_create_evaluation_rejects_invalid_email() -> None:
     payload = {**VALID_PAYLOAD, "email": "not-an-email"}
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post("/evaluations", json=payload)
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_evaluation_rejects_old_tipo_inmueble() -> None:
+    payload = {**VALID_PAYLOAD, "tipo_inmueble": "departamento"}
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/evaluations", json=payload)
     assert response.status_code == 422

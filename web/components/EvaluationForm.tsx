@@ -2,7 +2,7 @@
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 
-type TipoInmueble = 'departamento' | 'casa' | 'local' | 'oficina'
+type TipoInmueble = 'empresa' | 'profesional' | 'persona fisica'
 type Moneda = 'ARS' | 'USD'
 type Garantia = 'propietario' | 'caucion' | 'recibo' | 'aval' | 'deposito'
 
@@ -20,6 +20,8 @@ interface FormState {
   meses_restantes: string
   garantia: Garantia | ''
   caucion: boolean
+  sueldo: string
+  antiguedad_contrato: string
 }
 
 interface FileState {
@@ -29,6 +31,12 @@ interface FileState {
 
 interface Errors {
   [key: string]: string
+}
+
+interface OfertaResult {
+  calificacion: string
+  precio_propietario: number
+  tasa_mensual: number
 }
 
 function UploadZone({
@@ -81,18 +89,22 @@ function UploadZone({
   )
 }
 
+function fmt(n: number, prefix: string): string {
+  return prefix + Math.round(n).toLocaleString('es-AR')
+}
 
 export default function EvaluationForm() {
   const [form, setForm] = useState<FormState>({
     nombre: '', email: '', telefono: '', direccion: '', ciudad: '',
-    tipo_inmueble: 'departamento', valor_mensual: '', moneda: 'ARS',
+    tipo_inmueble: 'profesional', valor_mensual: '', moneda: 'ARS',
     fecha_inicio: '', fecha_fin: '', meses_restantes: '', garantia: '',
-    caucion: false,
+    caucion: false, sueldo: '', antiguedad_contrato: '',
   })
   const [files, setFiles] = useState<FileState>({ contrato: null, dni: null })
   const [errors, setErrors] = useState<Errors>({})
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [oferta, setOferta] = useState<OfertaResult | null>(null)
 
   function set(field: keyof FormState, value: string | boolean | TipoInmueble | Moneda | Garantia) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -107,6 +119,8 @@ export default function EvaluationForm() {
     if (!form.direccion.trim()) e.direccion = 'Campo requerido'
     if (!form.ciudad.trim()) e.ciudad = 'Campo requerido'
     if (!form.valor_mensual || parseFloat(form.valor_mensual) <= 0) e.valor_mensual = 'Debe ser mayor a 0'
+    if (!form.sueldo || parseFloat(form.sueldo) <= 0) e.sueldo = 'Debe ser mayor a 0'
+    if (!form.antiguedad_contrato || parseInt(form.antiguedad_contrato) < 0) e.antiguedad_contrato = 'Debe ser 0 o más'
     if (!form.fecha_inicio) e.fecha_inicio = 'Campo requerido'
     if (!form.fecha_fin) e.fecha_fin = 'Campo requerido'
     if (!form.garantia) e.garantia = 'Campo requerido'
@@ -133,14 +147,20 @@ export default function EvaluationForm() {
       meses_restantes: form.meses_restantes ? parseInt(form.meses_restantes) : undefined,
       garantia: form.garantia,
       caucion: form.caucion ? 'si' : 'no',
+      sueldo: parseFloat(form.sueldo),
+      antiguedad_contrato: parseInt(form.antiguedad_contrato),
     }
 
     try {
-      await fetch('/api/evaluations', {
+      const res = await fetch('/api/evaluations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.oferta) setOferta(data.oferta)
+      }
     } catch {}
 
     setSubmitting(false)
@@ -148,6 +168,7 @@ export default function EvaluationForm() {
   }
 
   if (success) {
+    const prefix = form.moneda === 'USD' ? 'U$S ' : '$'
     return (
       <section id="formulario" className="rco-section form-section-wrapper">
         <div className="section-inner">
@@ -168,6 +189,26 @@ export default function EvaluationForm() {
                     </div>
                   ))}
                 </div>
+                {oferta && (
+                  <div className="oferta-card">
+                    <div className="oferta-title">Estimación preliminar</div>
+                    <div className="oferta-grid">
+                      <div className="oferta-item">
+                        <span className="oferta-label">Calificación</span>
+                        <span className="oferta-value oferta-rating">{oferta.calificacion}</span>
+                      </div>
+                      <div className="oferta-item">
+                        <span className="oferta-label">Precio estimado</span>
+                        <span className="oferta-value">{fmt(oferta.precio_propietario, prefix)}</span>
+                      </div>
+                      <div className="oferta-item">
+                        <span className="oferta-label">Tasa mensual</span>
+                        <span className="oferta-value">{fmt(oferta.tasa_mensual, prefix)}</span>
+                      </div>
+                    </div>
+                    <p className="oferta-disclaimer">Estimación sujeta a verificación del contrato.</p>
+                  </div>
+                )}
                 <a href="#hero" className="btn-primary" style={{ display: 'inline-flex', margin: '0 auto', background: 'var(--navy)' }}>
                   Volver al inicio
                 </a>
@@ -233,11 +274,11 @@ export default function EvaluationForm() {
                     {errors.ciudad && <span className="form-error">{errors.ciudad}</span>}
                   </div>
                   <div className="form-group">
-                    <label>Tipo de inmueble <span className="req">*</span></label>
+                    <label>Tipo de inquilino <span className="req">*</span></label>
                     <div className="radio-group">
-                      {(['departamento', 'casa', 'local', 'oficina'] as TipoInmueble[]).map((t) => (
+                      {(['empresa', 'profesional', 'persona fisica'] as TipoInmueble[]).map((t) => (
                         <button key={t} type="button" className={`radio-btn ${form.tipo_inmueble === t ? 'active' : ''}`} onClick={() => set('tipo_inmueble', t)}>
-                          {t === 'local' ? 'Local comercial' : t.charAt(0).toUpperCase() + t.slice(1)}
+                          {t === 'persona fisica' ? 'Persona física' : t.charAt(0).toUpperCase() + t.slice(1)}
                         </button>
                       ))}
                     </div>
@@ -256,6 +297,18 @@ export default function EvaluationForm() {
                         <button key={m} type="button" className={`radio-btn ${form.moneda === m ? 'active' : ''}`} onClick={() => set('moneda', m)}>{m}</button>
                       ))}
                     </div>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Sueldo del inquilino <span className="req">*</span></label>
+                    <input type="number" className={`form-input ${errors.sueldo ? 'error' : ''}`} placeholder="500.000" value={form.sueldo} onChange={(e) => set('sueldo', e.target.value)} />
+                    {errors.sueldo && <span className="form-error">{errors.sueldo}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label>Antigüedad del contrato (meses) <span className="req">*</span></label>
+                    <input type="number" className={`form-input ${errors.antiguedad_contrato ? 'error' : ''}`} placeholder="12" min={0} value={form.antiguedad_contrato} onChange={(e) => set('antiguedad_contrato', e.target.value)} />
+                    {errors.antiguedad_contrato && <span className="form-error">{errors.antiguedad_contrato}</span>}
                   </div>
                 </div>
               </div>
