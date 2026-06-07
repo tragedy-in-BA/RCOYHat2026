@@ -22,6 +22,16 @@ out/
 .idea/
 *.swp
 
+# Claude Code
+.claude/
+
+# Test / type-check caches
+**/.pytest_cache/
+**/.mypy_cache/
+
+# Build outputs
+**/dist/
+
 # Docs (reference only)
 docs/
 

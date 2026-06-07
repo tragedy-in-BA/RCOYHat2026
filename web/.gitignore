@@ -1,2 +1,12 @@
+# Vercel
 .vercel
-foo
+
+# Next.js
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Env
+.env*.local
